@@ -1,0 +1,13 @@
+fastapi
+uvicorn
+sqlalchemy
+python-dotenv
+pyjwt
+pydantic[email]
+slowapi
+bcrypt
+psycopg2-binary
+pymysql
+python-multipart
+opencv-python
+numpy
