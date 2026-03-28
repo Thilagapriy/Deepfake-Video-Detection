@@ -11,3 +11,5 @@ pymysql
 python-multipart
 opencv-python
 numpy
+google-auth
+requests

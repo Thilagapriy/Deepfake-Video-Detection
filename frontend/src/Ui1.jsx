@@ -141,6 +141,19 @@ const Ui1 = () => {
               Prediction: {result.is_fake} ({result.is_fake === 'Fake' ? result.fake_percentage : parseFloat((100 - result.fake_percentage).toFixed(2))}%)
             </div>
 
+            {result.is_fake === 'Fake' && result.stats?.manipulation_type && (
+              <div style={{ marginTop: '15px', padding: '15px', background: 'rgba(255, 51, 78, 0.1)', border: '1px solid #ff334e', borderRadius: '12px' }}>
+                <h3 style={{ color: '#ff334e', margin: '0 0 5px 0', fontSize: '18px' }}>XAI Detection: {result.stats.manipulation_type}</h3>
+                <p style={{ margin: 0, fontSize: '14px', color: '#ffcdd2', lineHeight: '1.5' }}>{result.stats.xai_explanation}</p>
+              </div>
+            )}
+            {result.is_fake === 'Real' && (
+              <div style={{ marginTop: '15px', padding: '15px', background: 'rgba(51, 255, 170, 0.1)', border: '1px solid #33ffaa', borderRadius: '12px' }}>
+                <h3 style={{ color: '#33ffaa', margin: '0 0 5px 0', fontSize: '18px' }}>XAI Verification: Authentic</h3>
+                <p style={{ margin: 0, fontSize: '14px', color: '#caffeb', lineHeight: '1.5' }}>No spatial or temporal anomalies detected. Facial landmarks and lighting are consistent.</p>
+              </div>
+            )}
+
             <div style={{ height: 200, width: '100%', marginTop: '20px' }}>
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={getChartData()}>

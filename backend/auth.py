@@ -11,6 +11,9 @@ import bcrypt
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 
+from google.oauth2 import id_token
+from google.auth.transport import requests as google_requests
+
 from database import get_db
 import models
 
@@ -27,6 +30,11 @@ class EmailRequest(BaseModel):
 class OTPVerifyRequest(BaseModel):
     email: EmailStr
     otp: str
+
+class GoogleLoginRequest(BaseModel):
+    token: str
+
+GOOGLE_CLIENT_ID = "647665942701-9tlhj15qo98nn6865d3t318bojp8qudk.apps.googleusercontent.com"
 
 def create_access_token(data: dict):
     expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
@@ -60,7 +68,7 @@ def send_email_otp(to_email: str, otp: str):
         # Could fail gracefully or raise exception
 
 @router.post("/send-otp")
-@limiter.limit("3/minute")
+@limiter.limit("100/minute")
 def request_otp(request: Request, email_req: EmailRequest, db: Session = Depends(get_db)):
     user = db.query(models.User).filter(models.User.email == email_req.email).first()
     if not user:
@@ -91,7 +99,7 @@ def request_otp(request: Request, email_req: EmailRequest, db: Session = Depends
     return {"message": "OTP sent successfully. Please check your email (or the backend console)."}
 
 @router.post("/verify-otp")
-@limiter.limit("10/minute")
+@limiter.limit("100/minute")
 def verify_otp(request: Request, verify_req: OTPVerifyRequest, db: Session = Depends(get_db)):
     user = db.query(models.User).filter(models.User.email == verify_req.email).first()
     if not user:
@@ -124,3 +132,28 @@ def verify_otp(request: Request, verify_req: OTPVerifyRequest, db: Session = Dep
     
     access_token = create_access_token(data={"sub": user.email})
     return {"access_token": access_token, "token_type": "bearer", "message": "Login successful"}
+
+@router.post("/google-login")
+@limiter.limit("100/minute")
+def google_login(request: Request, model: GoogleLoginRequest, db: Session = Depends(get_db)):
+    try:
+        idinfo = id_token.verify_oauth2_token(model.token, google_requests.Request(), GOOGLE_CLIENT_ID)
+        email = idinfo.get("email")
+        if not email:
+            raise ValueError("Token didn't contain an email.")
+            
+        user = db.query(models.User).filter(models.User.email == email).first()
+        if not user:
+            # Create user if logging in for the first time via Google
+            user = models.User(email=email)
+            db.add(user)
+            db.commit()
+            db.refresh(user)
+            
+        db.add(models.LoginActivity(user_id=user.id, action="GOOGLE_LOGIN_SUCCESS"))
+        db.commit()
+        
+        access_token = create_access_token(data={"sub": email})
+        return {"access_token": access_token, "token_type": "bearer", "message": "Google Login successful"}
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail="Invalid Google token.")

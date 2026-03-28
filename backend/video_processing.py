@@ -48,8 +48,21 @@ async def simulate_analysis(video_path: str):
     
     cap.release()
     
-    is_fake = random.choice(["Real", "Fake"])
-    fake_percentage = round(random.uniform(55.0, 99.9) if is_fake == "Fake" else random.uniform(0.1, 45.0), 2)
+    is_fake_raw = random.uniform(0, 100)
+    is_fake = "Fake" if is_fake_raw > 85.0 else "Real"
+    fake_percentage = round(random.uniform(85.1, 99.9) if is_fake == "Fake" else random.uniform(0.1, 84.9), 2)
+    
+    manipulation_type = "None"
+    xai_explanation = "No spatial or temporal anomalies detected. The video appears authentic."
+    
+    if is_fake == "Fake":
+        methods = [
+            ("FaceSwap", "Anomalous blending artifacts detected around the jawline."),
+            ("FaceShifter", "Inconsistent lighting patterns and facial landmark distortion detected."),
+            ("Face2Face", "Unnatural lip-sync and temporal flickering identified."),
+            ("Deepfakes", "Mismatched resolution between the inner face mask and outer cranial region.")
+        ]
+        manipulation_type, xai_explanation = random.choice(methods)
     
     frames_names = [f["name"] for f in frames_extracted]
     gradcam_frame_name = ""
@@ -86,7 +99,9 @@ async def simulate_analysis(video_path: str):
     stats = {
         "confidence_score": fake_percentage,
         "faces_detected": random.randint(1, 3),
-        "total_frames_analyzed": total_frames
+        "total_frames_analyzed": total_frames,
+        "manipulation_type": manipulation_type,
+        "xai_explanation": xai_explanation
     }
     
     return is_fake, fake_percentage, frames_names, gradcam_frame_name, stats

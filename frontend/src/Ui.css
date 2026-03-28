@@ -29,6 +29,38 @@
   animation: float 3s ease-in-out infinite;
 }
 
+.tab-buttons {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+}
+
+.tab-btn {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.active-tab {
+  background: #ff334e;
+  color: white;
+  box-shadow: 0 4px 10px rgba(255, 51, 78, 0.4);
+}
+
+.inactive-tab {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ccc;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.inactive-tab:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
 @keyframes float {
   0%, 100% { transform: translateY(-50%); }
   50% { transform: translateY(-50%) translateY(-10px); }
